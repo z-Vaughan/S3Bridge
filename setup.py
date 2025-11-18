@@ -29,7 +29,14 @@ setup(
     entry_points={
         "console_scripts": [
             "universal-s3-setup=scripts.setup:main",
+            "universal-s3-service=scripts.service_manager:main",
             "universal-s3-add-service=scripts.add_service:main",
+            "universal-s3-list-services=scripts.list_services:main",
+            "universal-s3-remove-service=scripts.remove_service:main",
+            "universal-s3-edit-service=scripts.edit_service:main",
+            "universal-s3-status=scripts.service_status:main",
+            "universal-s3-test=scripts.test_service:main",
+            "universal-s3-backup=scripts.backup_restore:main",
         ],
     },
     include_package_data=True,

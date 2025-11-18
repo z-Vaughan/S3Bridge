@@ -72,7 +72,10 @@ class UniversalS3Client:
             s3 = self._get_s3_client()
             s3.head_object(Bucket=self.bucket_name, Key=key)
             return True
-        except s3.exceptions.NoSuchKey:
+        except Exception as e:
+            # Handle both NoSuchKey and other exceptions
+            if hasattr(e, 'response') and e.response.get('Error', {}).get('Code') == 'NoSuchKey':
+                return False
             return False
     
     def read_json(self, key: str) -> Optional[Dict[str, Any]]:

@@ -61,7 +61,7 @@ def find_existing_api_gateway():
         return None
         
     except Exception as e:
-        print(f"⚠️  Could not search for existing API Gateway: {e}")
+        print(f"WARNING: Could not search for existing API Gateway: {e}")
         return None
 
 def create_service_role(service_name, bucket_patterns, permissions, config):
@@ -121,11 +121,11 @@ def create_service_role(service_name, bucket_patterns, permissions, config):
             PolicyDocument=json.dumps(policy_doc)
         )
         
-        print(f"✅ Created IAM role: {role_name}")
+        print(f"Created IAM role: {role_name}")
         return config.service_role_arn(service_name)
         
     except iam.exceptions.EntityAlreadyExistsException:
-        print(f"⚠️  Role {role_name} already exists, updating policy...")
+        print(f"Role {role_name} already exists, updating policy...")
         
         # Update existing policy
         iam.put_role_policy(
@@ -146,17 +146,14 @@ def update_lambda_config_only(service_name, bucket_patterns, role_arn):
     lambda_file = lambda_dir / "universal_credential_service.py"
     
     if not lambda_file.exists():
-        print(f"⚠️  Lambda function file not found: {lambda_file}")
+        print(f"Lambda function file not found: {lambda_file}")
         return
     
     with open(lambda_file, 'r') as f:
         lambda_code = f.read()
     
     # Insert service into service_roles dictionary
-    service_entry = f"""    '{service_name}': {{
-        'role': '{role_arn}',
-        'buckets': {bucket_patterns}
-    },"""
+    service_entry = f"    '{service_name}': {{\n        'role': '{role_arn}',\n        'buckets': {bucket_patterns}\n    }},"
     
     # Find and update service_roles dictionary
     if 'service_roles = {' in lambda_code:
@@ -194,11 +191,11 @@ def update_lambda_config_only(service_name, bucket_patterns, role_arn):
                 FunctionName='universal-credential-service',
                 ZipFile=zip_buffer.getvalue()
             )
-            print(f"✅ Updated Lambda function code for service: {service_name}")
+            print(f"Updated Lambda function code for service: {service_name}")
         except Exception as e:
-            print(f"⚠️  Failed to update Lambda function: {e}")
+            print(f"Failed to update Lambda function: {e}")
     else:
-        print(f"⚠️  Could not find service_roles dictionary in Lambda code")
+        print(f"Could not find service_roles dictionary in Lambda code")
 
 def add_service(service_name, bucket_patterns, permissions='read-write'):
     """Add new service to Universal S3 Library"""
@@ -208,13 +205,13 @@ def add_service(service_name, bucket_patterns, permissions='read-write'):
     # Check if infrastructure is deployed (either CloudFormation or existing API Gateway)
     existing_api = find_existing_api_gateway()
     if not config.is_deployed() and not existing_api:
-        print("❌ Universal S3 Library not deployed. Run setup first:")
+        print("Universal S3 Library not deployed. Run setup first:")
         print("   python scripts/setup.py")
         return False
     
-    print(f"➕ Adding service: {service_name}")
-    print(f"📦 Bucket patterns: {bucket_patterns}")
-    print(f"🔐 Permissions: {permissions}")
+    print(f"Adding service: {service_name}")
+    print(f"Bucket patterns: {bucket_patterns}")
+    print(f"Permissions: {permissions}")
     
     try:
         # Create IAM role
@@ -223,37 +220,37 @@ def add_service(service_name, bucket_patterns, permissions='read-write'):
         # Check for existing API Gateway
         existing_api = find_existing_api_gateway()
         if existing_api:
-            print(f"🔍 Found existing API Gateway: {existing_api}")
-            print(f"📝 Will update existing endpoint instead of creating new one")
+            print(f"Found existing API Gateway: {existing_api}")
+            print(f"Will update existing endpoint instead of creating new one")
             # Update Lambda function code only
             update_lambda_config_only(service_name, bucket_patterns, role_arn)
             
             # Deploy Lambda changes only
-            print(f"🚀 Deploying Lambda changes only...")
+            print(f"Deploying Lambda changes only...")
             import subprocess
             result = subprocess.run([sys.executable, str(Path(__file__).parent / 'deploy_lambda_only.py')], 
                                   capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"✅ Lambda deployment successful")
+                print(f"Lambda deployment successful")
             else:
-                print(f"⚠️  Lambda deployment failed: {result.stderr}")
+                print(f"Lambda deployment failed: {result.stderr}")
                 return False
         else:
-            print(f"🆕 No existing API Gateway found")
-            print(f"💡 Run setup script to deploy infrastructure first:")
+            print(f"No existing API Gateway found")
+            print(f"Run setup script to deploy infrastructure first:")
             print(f"   python scripts/setup.py --admin-user {config.load_deployment_config().get('admin_username', 'admin') if config.load_deployment_config() else 'admin'}")
             return False
         
-        print(f"🎉 Service '{service_name}' added successfully!")
-        print(f"🔗 API Endpoint: https://{existing_api}.execute-api.us-east-1.amazonaws.com/prod/credentials")
-        print(f"💡 Usage example:")
+        print(f"Service '{service_name}' added successfully!")
+        print(f"API Endpoint: https://{existing_api}.execute-api.us-east-1.amazonaws.com/prod/credentials")
+        print(f"Usage example:")
         print(f"   from universal_s3_library import UniversalS3Client")
         print(f"   client = UniversalS3Client('your-bucket', '{service_name}')")
         
         return True
         
     except Exception as e:
-        print(f"❌ Failed to add service: {e}")
+        print(f"Failed to add service: {e}")
         return False
 
 def main():

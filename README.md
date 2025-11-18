@@ -68,24 +68,56 @@ python scripts/add_service.py myapp "myapp-*" --permissions read-write
 
 ## Service Management
 
-### Add New Service
+### Unified Service Manager
 ```bash
-# Python
-python scripts/add_service.py SERVICE_NAME BUCKET_PATTERNS [OPTIONS]
+# List all services
+python scripts/service_manager.py list
 
-# PowerShell (Windows)
-.\add_service.ps1 -ServiceName SERVICE_NAME -BucketPatterns BUCKET_PATTERNS -Permissions PERMISSION_LEVEL
+# Add new service
+python scripts/service_manager.py add myapp "myapp-*" --permissions read-write
 
-# Examples:
-python scripts/add_service.py analytics "company-analytics-*,*-analytics-*" --permissions read-only
-.\add_service.ps1 -ServiceName webapp -BucketPatterns "webapp-prod-*" -Permissions read-write
-python scripts/add_service.py admin "*" --permissions admin
+# Edit existing service
+python scripts/service_manager.py edit myapp --bucket-patterns "myapp-*,shared-*"
+
+# Remove service
+python scripts/service_manager.py remove myapp --force
+
+# Show system status
+python scripts/service_manager.py status
+
+# Backup configurations
+python scripts/service_manager.py backup --file my_backup.json
+
+# Restore configurations
+python scripts/service_manager.py restore my_backup.json --dry-run
 ```
 
-**Smart Deployment**: The add_service script automatically:
-- Detects existing API Gateway endpoints
-- Updates only Lambda functions (preserves existing infrastructure)
-- Avoids deployment loops and duplicate API creation
+### Individual Scripts
+```bash
+# Add service
+python scripts/add_service.py analytics "company-analytics-*" --permissions read-only
+
+# List services
+python scripts/list_services.py
+
+# Edit service
+python scripts/edit_service.py webapp --bucket-patterns "webapp-*,shared-*"
+
+# Remove service
+python scripts/remove_service.py oldservice --force
+
+# Test service
+python scripts/test_service.py myapp "myapp-test-bucket"
+
+# System status
+python scripts/service_status.py
+```
+
+**Smart Management**: The service management tools automatically:
+- Detect existing infrastructure and preserve it
+- Validate service configurations before applying changes
+- Provide comprehensive testing and monitoring capabilities
+- Support backup and restore of all service configurations
 
 ### Valid Permissions
 - `read-only`: GetObject, ListBucket

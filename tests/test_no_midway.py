@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 def test_auth_provider_initialization():
     """Test that auth provider can be initialized without Midway"""
-    from universal_auth import UniversalAuthProvider
+    from src.universal_auth import UniversalAuthProvider
     
     # Should initialize without errors
     auth = UniversalAuthProvider("test-service")
@@ -21,7 +21,7 @@ def test_auth_provider_initialization():
 
 def test_s3_client_initialization():
     """Test that S3 client can be initialized without Midway"""
-    from universal_s3_client import UniversalS3Client
+    from src.universal_s3_client import UniversalS3Client
     
     # Should initialize without errors (will fail on actual use without deployment)
     try:
@@ -38,7 +38,7 @@ def test_s3_client_initialization():
 
 def test_api_key_environment():
     """Test API key environment variable handling"""
-    from universal_auth import UniversalAuthProvider
+    from src.universal_auth import UniversalAuthProvider
     
     # Set test API key
     os.environ['UNIVERSAL_S3_API_KEY'] = 'test-key-123'
