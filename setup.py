@@ -10,7 +10,7 @@ setup(
     description="Account-agnostic credential service for secure S3 access",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=find_packages(),
+    packages=find_packages() + ['scripts'],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -28,15 +28,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "universal-s3-setup=scripts.setup:main",
-            "universal-s3-service=scripts.service_manager:main",
-            "universal-s3-add-service=scripts.add_service:main",
-            "universal-s3-list-services=scripts.list_services:main",
-            "universal-s3-remove-service=scripts.remove_service:main",
-            "universal-s3-edit-service=scripts.edit_service:main",
-            "universal-s3-status=scripts.service_status:main",
-            "universal-s3-test=scripts.test_service:main",
-            "universal-s3-backup=scripts.backup_restore:main",
+            "s3bridge=scripts.cli:main",
         ],
     },
     include_package_data=True,

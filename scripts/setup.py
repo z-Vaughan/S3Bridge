@@ -73,9 +73,11 @@ def create_lambda_zip(lambda_dir, function_name):
     zip_buffer = io.BytesIO()
     
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        lambda_file = lambda_dir / f"{function_name}.py"
+        lambda_file = lambda_dir / "universal_credential_service.py"
         if lambda_file.exists():
             zip_file.write(lambda_file, "lambda_function.py")
+        else:
+            print(f"⚠️  Lambda file not found: {lambda_file}")
     
     return zip_buffer.getvalue()
 
@@ -144,10 +146,19 @@ def deploy_infrastructure(admin_username='admin', force=False):
         print(f"🎉 S3Bridge deployed successfully!")
         print(f"🔗 API URL: {api_url}")
         print(f"🔑 API Key: {api_key}")
-        print(f"📝 Next steps:")
-        print(f"   1. Set API key: export S3BRIDGE_API_KEY={api_key}")
-        print(f"   2. Add services: python -m s3bridge.add_service myapp 'myapp-*'")
-        print(f"   3. Use in code: from s3bridge import S3BridgeClient")
+        
+        # Set environment variable for current session
+        os.environ['S3BRIDGE_API_KEY'] = api_key
+        print(f"✅ API key set for current session")
+        
+        # Ask to persist
+        persist = input("\n💾 Persist API key to environment? (y/N): ").lower().strip()
+        if persist == 'y':
+            persist_api_key(api_key)
+        
+        print(f"\n📝 Next steps:")
+        print(f"   1. Add services: s3bridge add myapp 'myapp-*'")
+        print(f"   2. Use in code: from s3bridge import S3BridgeClient")
         
         return True
         
@@ -164,6 +175,33 @@ def get_api_key(config):
     except Exception:
         return None
 
+def persist_api_key(api_key):
+    """Persist API key to environment based on OS"""
+    import platform
+    
+    try:
+        if platform.system() == "Windows":
+            # Add to user environment variables via registry
+            import winreg
+            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0, winreg.KEY_SET_VALUE)
+            winreg.SetValueEx(key, "S3BRIDGE_API_KEY", 0, winreg.REG_SZ, api_key)
+            winreg.CloseKey(key)
+            print(f"✅ API key persisted to Windows user environment")
+            print(f"🔄 Restart terminal or run: refreshenv")
+        else:
+            # Add to shell profile
+            shell_profile = Path.home() / ".bashrc"
+            if not shell_profile.exists():
+                shell_profile = Path.home() / ".zshrc"
+            
+            with open(shell_profile, "a") as f:
+                f.write(f"\nexport S3BRIDGE_API_KEY={api_key}\n")
+            print(f"✅ API key added to {shell_profile}")
+            print(f"🔄 Restart terminal or run: source {shell_profile}")
+    except Exception as e:
+        print(f"⚠️  Could not persist API key: {e}")
+        print(f"💡 Manually add: S3BRIDGE_API_KEY={api_key}")
+
 def deploy_lambda_functions(config):
     """Deploy Lambda function code"""
     
@@ -171,7 +209,7 @@ def deploy_lambda_functions(config):
     lambda_dir = Path(__file__).parent.parent / "lambda_functions"
     
     functions = [
-        'universal_credential_service'
+        's3bridge-credential-service'
     ]
     
     for function_name in functions:
@@ -183,7 +221,7 @@ def deploy_lambda_functions(config):
         # Update function code
         try:
             lambda_client.update_function_code(
-                FunctionName=function_name,
+                FunctionName='s3bridge-credential-service',
                 ZipFile=zip_content
             )
             print(f"✅ {function_name} deployed")

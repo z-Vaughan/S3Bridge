@@ -8,6 +8,7 @@ import boto3
 import json
 import argparse
 import sys
+import os
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -136,68 +137,80 @@ def create_service_role(service_name, bucket_patterns, permissions, config):
         
         return config.service_role_arn(service_name)
 
-def update_lambda_config_only(service_name, bucket_patterns, role_arn):
-    """Update only Lambda function code without touching API Gateway"""
+def update_lambda_config_only(service_name, bucket_patterns, role_arn, force=False):
+    """Update Lambda environment variables instead of code"""
     
     lambda_client = boto3.client('lambda')
     
-    # Read current Lambda function code
-    lambda_dir = Path(__file__).parent.parent / "lambda_functions"
-    lambda_file = lambda_dir / "universal_credential_service.py"
-    
-    if not lambda_file.exists():
-        print(f"Lambda function file not found: {lambda_file}")
-        return
-    
-    with open(lambda_file, 'r') as f:
-        lambda_code = f.read()
-    
-    # Insert service into service_roles dictionary
-    service_entry = f"    '{service_name}': {{\n        'role': '{role_arn}',\n        'buckets': {bucket_patterns}\n    }},"
-    
-    # Find and update service_roles dictionary
-    if 'service_roles = {' in lambda_code:
-        lines = lambda_code.split('\n')
-        new_lines = []
-        in_service_roles = False
+    try:
+        # Get current environment variables
+        response = lambda_client.get_function_configuration(FunctionName='s3bridge-credential-service')
+        env_vars = response.get('Environment', {}).get('Variables', {})
         
-        for line in lines:
-            if 'service_roles = {' in line:
-                in_service_roles = True
-                new_lines.append(line)
-            elif in_service_roles and line.strip() == '}':
-                # Add new service before closing brace
-                new_lines.append(service_entry)
-                new_lines.append(line)
-                in_service_roles = False
-            else:
-                new_lines.append(line)
+        # Check if service already exists
+        service_env_key = f'SERVICE_{service_name.upper()}'
+        if service_env_key in env_vars and not force:
+            print(f"\n⚠️  Service '{service_name}' already exists")
+            overwrite = input("Overwrite existing service? (y/N): ").lower().strip()
+            if overwrite != 'y':
+                print("Service addition cancelled")
+                return False
         
-        # Write updated code back to file
-        updated_code = '\n'.join(new_lines)
-        with open(lambda_file, 'w') as f:
-            f.write(updated_code)
+        # Add service as environment variable
+        service_config = {
+            'role': role_arn,
+            'buckets': bucket_patterns
+        }
+        env_vars[service_env_key] = json.dumps(service_config)
         
-        # Deploy updated Lambda function
-        import zipfile
-        import io
+        # Update Lambda environment
+        lambda_client.update_function_configuration(
+            FunctionName='s3bridge-credential-service',
+            Environment={'Variables': env_vars}
+        )
         
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            zip_file.write(lambda_file, "lambda_function.py")
+        print(f"Updated Lambda environment for service: {service_name}")
+        return True
         
-        try:
-            lambda_client.update_function_code(
-                FunctionName='s3bridge-credential-service',
-                ZipFile=zip_buffer.getvalue()
-            )
-            print(f"Updated Lambda function code for service: {service_name}")
-        except Exception as e:
-            print(f"Failed to update Lambda function: {e}")
-    else:
-        print(f"Could not find service_roles dictionary in Lambda code")
+    except Exception as e:
+        print(f"Failed to update Lambda environment: {e}")
+        return False
 
-def add_service(service_name, bucket_patterns, permissions='read-write'):
+def check_and_create_buckets(bucket_patterns):
+    """Check if buckets exist and offer to create them"""
+    s3 = boto3.client('s3')
+    
+    # Extract actual bucket names from patterns (remove wildcards)
+    bucket_names = []
+    for pattern in bucket_patterns:
+        if '*' not in pattern:
+            bucket_names.append(pattern)
+    
+    if not bucket_names:
+        return  # Only wildcard patterns, can't pre-create
+    
+    missing_buckets = []
+    for bucket in bucket_names:
+        try:
+            s3.head_bucket(Bucket=bucket)
+        except s3.exceptions.NoSuchBucket:
+            missing_buckets.append(bucket)
+        except Exception:
+            pass  # Access denied or other error, assume exists
+    
+    if missing_buckets:
+        print(f"\n⚠️  Missing buckets: {', '.join(missing_buckets)}")
+        create = input("Create missing buckets? (y/N): ").lower().strip()
+        
+        if create == 'y':
+            for bucket in missing_buckets:
+                try:
+                    s3.create_bucket(Bucket=bucket)
+                    print(f"✅ Created bucket: {bucket}")
+                except Exception as e:
+                    print(f"❌ Failed to create {bucket}: {e}")
+
+def add_service(service_name, bucket_patterns, permissions='read-write', force=False):
     """Add new service to S3Bridge"""
     
     config = AWSConfig()
@@ -213,6 +226,9 @@ def add_service(service_name, bucket_patterns, permissions='read-write'):
     print(f"Bucket patterns: {bucket_patterns}")
     print(f"Permissions: {permissions}")
     
+    # Check and optionally create buckets
+    check_and_create_buckets(bucket_patterns)
+    
     try:
         # Create IAM role
         role_arn = create_service_role(service_name, bucket_patterns, permissions, config)
@@ -223,7 +239,9 @@ def add_service(service_name, bucket_patterns, permissions='read-write'):
             print(f"Found existing API Gateway: {existing_api}")
             print(f"Will update existing endpoint instead of creating new one")
             # Update Lambda function code only
-            update_lambda_config_only(service_name, bucket_patterns, role_arn)
+            success = update_lambda_config_only(service_name, bucket_patterns, role_arn, force)
+            if not success:
+                return False
             
             # Deploy Lambda changes only
             print(f"Deploying Lambda changes only...")
@@ -259,6 +277,7 @@ def main():
     parser.add_argument('bucket_patterns', help='Comma-separated bucket patterns (e.g., "app-*,*-data")')
     parser.add_argument('--permissions', choices=['read-only', 'read-write', 'admin'], 
                        default='read-write', help='Access level')
+    parser.add_argument('--force', action='store_true', help='Overwrite existing service without confirmation')
 
     
     args = parser.parse_args()
@@ -266,7 +285,7 @@ def main():
     # Parse bucket patterns
     bucket_patterns = [p.strip() for p in args.bucket_patterns.split(',')]
     
-    success = add_service(args.service_name, bucket_patterns, args.permissions)
+    success = add_service(args.service_name, bucket_patterns, args.permissions, args.force)
     return 0 if success else 1
 
 if __name__ == "__main__":

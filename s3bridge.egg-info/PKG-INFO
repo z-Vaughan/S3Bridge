@@ -1,0 +1,183 @@
+Metadata-Version: 2.4
+Name: s3bridge
+Version: 1.0.0
+Summary: Account-agnostic credential service for secure S3 access
+Author: Universal S3 Team
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: boto3>=1.26.0
+Requires-Dist: requests>=2.28.0
+Dynamic: author
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# S3Bridge
+
+A modular, account-agnostic credential service for secure S3 access across multiple applications and AWS accounts.
+
+## Quick Start
+
+```bash
+# Install
+pip install s3bridge
+
+# Setup infrastructure (one-time per AWS account)
+python -m s3bridge.setup --admin-user myusername
+
+# Set API key (from setup output)
+export S3BRIDGE_API_KEY=your-api-key-here
+
+# Add services
+python -m s3bridge.add_service analytics "company-analytics-*" --permissions read-only
+python -m s3bridge.add_service app1 "app1-data-*" --permissions read-write
+```
+
+```python
+from s3bridge import S3BridgeClient
+
+# Use with any AWS account
+s3_client = S3BridgeClient("your-bucket-name", "analytics")
+data = {"config": "value"}
+s3_client.write_json(data, "config/settings.json")
+```
+
+## Features
+
+- **Account Agnostic**: Works with any AWS account
+- **One-Command Setup**: CloudFormation deployment
+- **Dynamic Service Onboarding**: Add services via script
+- **API Key Authentication**: Simple and secure authentication
+- **Multi-Tier Security**: Service-based access control
+
+## Installation
+
+### Prerequisites
+- AWS CLI configured with admin permissions
+- Python 3.9+
+
+### Setup
+```bash
+# 1. Clone or download the library
+git clone <repository-url> s3bridge
+cd s3bridge
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Deploy infrastructure to your AWS account
+python scripts/setup.py --admin-user your-username
+
+# 4. Set the API key from setup output
+export S3BRIDGE_API_KEY=your-api-key-here
+
+# 5. Add your first service
+python scripts/add_service.py myapp "myapp-*" --permissions read-write
+```
+
+**Smart Setup**: The setup script automatically:
+- Detects existing API Gateway endpoints
+- Reuses existing infrastructure when possible
+- Only creates new resources when necessary
+
+## Service Management
+
+### Unified Service Manager
+```bash
+# List all services
+python scripts/service_manager.py list
+
+# Add new service
+python scripts/service_manager.py add myapp "myapp-*" --permissions read-write
+
+# Edit existing service
+python scripts/service_manager.py edit myapp --bucket-patterns "myapp-*,shared-*"
+
+# Remove service
+python scripts/service_manager.py remove myapp --force
+
+# Show system status
+python scripts/service_manager.py status
+
+# Backup configurations
+python scripts/service_manager.py backup --file my_backup.json
+
+# Restore configurations
+python scripts/service_manager.py restore my_backup.json --dry-run
+```
+
+### Individual Scripts
+```bash
+# Add service
+python scripts/add_service.py analytics "company-analytics-*" --permissions read-only
+
+# List services
+python scripts/list_services.py
+
+# Edit service
+python scripts/edit_service.py webapp --bucket-patterns "webapp-*,shared-*"
+
+# Remove service
+python scripts/remove_service.py oldservice --force
+
+# Test service
+python scripts/test_service.py myapp "myapp-test-bucket"
+
+# System status
+python scripts/service_status.py
+```
+
+**Smart Management**: The service management tools automatically:
+- Detect existing infrastructure and preserve it
+- Validate service configurations before applying changes
+- Provide comprehensive testing and monitoring capabilities
+- Support backup and restore of all service configurations
+
+### Valid Permissions
+- `read-only`: GetObject, ListBucket
+- `read-write`: GetObject, PutObject, DeleteObject, ListBucket (default)
+- `admin`: Full S3 access (s3:*)
+
+## Usage Examples
+
+```python
+from s3bridge import S3BridgeClient
+
+# Analytics service (read-only)
+analytics = S3BridgeClient("company-analytics-data", "analytics")
+reports = analytics.list_objects("reports/")
+
+# Application service (read-write)
+app = S3BridgeClient("webapp-prod-uploads", "webapp")
+app.write_json({"user": "data"}, "users/user123.json")
+
+# Admin service (full access)
+admin = S3BridgeClient("any-bucket", "admin")
+admin.upload_file("backup.zip", "backups/daily.zip")
+```
+
+## Architecture
+
+- **Lambda Functions**: Credential service with API key authentication
+- **API Gateway**: Secure credential endpoint with API key authentication
+- **IAM Roles**: Service-specific least-privilege roles
+- **CloudFormation**: Infrastructure as code
+- **Dynamic Configuration**: Account-aware service mapping
+
+## Documentation
+
+- [Setup Guide](docs/SETUP.md)
+- [Service Management](docs/SERVICES.md)
+- [API Reference](docs/API.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)

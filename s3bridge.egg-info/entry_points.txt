@@ -1,0 +1,2 @@
+[console_scripts]
+s3bridge = scripts.cli:main

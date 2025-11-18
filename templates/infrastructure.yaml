@@ -68,6 +68,7 @@ Resources:
   # Usage plan
   UniversalUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
+    DependsOn: ApiDeployment
     Properties:
       UsagePlanName: universal-s3-usage-plan
       Description: Usage plan for S3Bridge

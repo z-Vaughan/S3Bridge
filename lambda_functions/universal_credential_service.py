@@ -6,25 +6,24 @@ from datetime import datetime
 def get_service_config():
     """Load service configuration from environment variables"""
     
-    # Base configuration
-    config = {}
+    services = {}
+    
+    # Add universal service
+    services['universal'] = {
+        'role': f"arn:aws:iam::{os.environ['AWS_ACCOUNT_ID']}:role/service-role/universal-s3-access-role",
+        'buckets': ['*']
+    }
     
     # Load services from environment variables
     for key, value in os.environ.items():
         if key.startswith('SERVICE_'):
             service_name = key[8:].lower()  # Remove 'SERVICE_' prefix
             try:
-                config[service_name] = json.loads(value)
+                services[service_name] = json.loads(value)
             except json.JSONDecodeError:
                 continue
     
-    # Add universal service
-    config['universal'] = {
-        'role': f"arn:aws:iam::{os.environ['AWS_ACCOUNT_ID']}:role/service-role/s3bridge-access-role",
-        'buckets': ['*']
-    }
-    
-    return config
+    return services
 
 def lambda_handler(event, context):
     """
