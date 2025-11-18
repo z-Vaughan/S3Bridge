@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test Runner for Universal S3 Library
+Test Runner for S3Bridge
 Handles imports and provides comprehensive test execution
 """
 
@@ -117,7 +117,7 @@ def main():
     """Main test runner"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Universal S3 Library Test Runner')
+    parser = argparse.ArgumentParser(description='S3Bridge Test Runner')
     parser.add_argument('--class', dest='test_class', 
                        choices=['operations', 'auth', 's3', 'config', 'errors'],
                        help='Run specific test class')
@@ -128,7 +128,7 @@ def main():
     
     args = parser.parse_args()
     
-    print("Universal S3 Library Test Runner")
+    print("S3Bridge Test Runner")
     print("=" * 50)
     
     # Check dependencies

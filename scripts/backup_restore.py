@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backup and Restore Script
-Backup/restore service configurations for Universal S3 Library
+Backup/restore service configurations for S3Bridge
 """
 
 import boto3
@@ -34,7 +34,7 @@ def backup_services(backup_file=None):
     try:
         # Backup Lambda configuration
         lambda_client = boto3.client('lambda')
-        response = lambda_client.get_function_configuration(FunctionName='universal-credential-service')
+        response = lambda_client.get_function_configuration(FunctionName='s3bridge-credential-service')
         env_vars = response.get('Environment', {}).get('Variables', {})
         
         for key, value in env_vars.items():
@@ -157,7 +157,7 @@ def restore_services(backup_file, dry_run=False):
         else:
             try:
                 lambda_client = boto3.client('lambda')
-                response = lambda_client.get_function_configuration(FunctionName='universal-credential-service')
+                response = lambda_client.get_function_configuration(FunctionName='s3bridge-credential-service')
                 env_vars = response.get('Environment', {}).get('Variables', {})
                 
                 # Add restored services
@@ -167,7 +167,7 @@ def restore_services(backup_file, dry_run=False):
                 
                 # Update Lambda function
                 lambda_client.update_function_configuration(
-                    FunctionName='universal-credential-service',
+                    FunctionName='s3bridge-credential-service',
                     Environment={'Variables': env_vars}
                 )
                 
@@ -187,7 +187,7 @@ def restore_services(backup_file, dry_run=False):
     return success
 
 def main():
-    parser = argparse.ArgumentParser(description='Backup/restore Universal S3 Library services')
+    parser = argparse.ArgumentParser(description='Backup/restore S3Bridge services')
     subparsers = parser.add_subparsers(dest='command', help='Commands')
     
     # Backup command

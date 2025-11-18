@@ -1,6 +1,6 @@
-# Troubleshooting Guide - Universal S3 Library
+# Troubleshooting Guide - S3Bridge
 
-Common issues and solutions for the Universal S3 Library.
+Common issues and solutions for the S3Bridge.
 
 ## Authentication Issues
 
@@ -8,7 +8,7 @@ Common issues and solutions for the Universal S3 Library.
 
 **Error:**
 ```
-Exception: API key not found. Set UNIVERSAL_S3_API_KEY environment variable or redeploy infrastructure.
+Exception: API key not found. Set S3BRIDGE_API_KEY environment variable or redeploy infrastructure.
 ```
 
 **Solutions:**
@@ -16,18 +16,18 @@ Exception: API key not found. Set UNIVERSAL_S3_API_KEY environment variable or r
 1. **Set Environment Variable:**
 ```bash
 # Linux/macOS
-export UNIVERSAL_S3_API_KEY=your-api-key-here
+export S3BRIDGE_API_KEY=your-api-key-here
 
 # Windows CMD
-set UNIVERSAL_S3_API_KEY=your-api-key-here
+set S3BRIDGE_API_KEY=your-api-key-here
 
 # PowerShell
-$env:UNIVERSAL_S3_API_KEY="your-api-key-here"
+$env:S3BRIDGE_API_KEY="your-api-key-here"
 ```
 
 2. **Get API Key from CloudFormation:**
 ```bash
-aws cloudformation describe-stacks --stack-name universal-s3-library \
+aws cloudformation describe-stacks --stack-name s3bridge \
   --query 'Stacks[0].Outputs[?OutputKey==`ApiKey`].OutputValue' --output text
 ```
 
@@ -44,7 +44,7 @@ if deployment_config:
 
 **Error:**
 ```
-Exception: Universal S3 Library not deployed. Run: python -m universal_s3_library.setup
+Exception: S3Bridge not deployed. Run: python -m s3bridge.setup
 ```
 
 **Solution:**
@@ -75,13 +75,13 @@ python scripts/add_service.py myservice "myservice-*" --permissions read-write
 2. **Check Service Registration:**
 ```bash
 # View Lambda function code
-aws lambda get-function --function-name universal-credential-service
+aws lambda get-function --function-name s3bridge-credential-service
 ```
 
 3. **Verify Service in Lambda:**
 ```python
 # Check if service exists in Lambda environment variables
-aws lambda get-function-configuration --function-name universal-credential-service \
+aws lambda get-function-configuration --function-name s3bridge-credential-service \
   --query 'Environment.Variables'
 ```
 
@@ -111,10 +111,10 @@ python scripts/add_service.py analytics "analytics-*,*-analytics-*,webapp-data" 
 3. **Use Correct Service:**
 ```python
 # Wrong service for bucket
-client = UniversalS3Client("webapp-data", "analytics")  # ✗
+client = S3BridgeClient("webapp-data", "analytics")  # ✗
 
 # Correct service for bucket  
-client = UniversalS3Client("webapp-data", "webapp")     # ✓
+client = S3BridgeClient("webapp-data", "webapp")     # ✓
 ```
 
 ## AWS Infrastructure Issues
@@ -141,7 +141,7 @@ aws iam get-user-policy --user-name your-username --policy-name AdminPolicy
 
 3. **Check Stack Status:**
 ```bash
-aws cloudformation describe-stacks --stack-name universal-s3-library
+aws cloudformation describe-stacks --stack-name s3bridge
 ```
 
 ### Lambda Function Errors
@@ -165,7 +165,7 @@ python scripts/add_service.py myservice "myservice-*" --permissions read-write
 
 3. **View Lambda Logs:**
 ```bash
-aws logs filter-log-events --log-group-name "/aws/lambda/universal-credential-service" \
+aws logs filter-log-events --log-group-name "/aws/lambda/s3bridge-credential-service" \
   --start-time $(date -d "1 hour ago" +%s)000
 ```
 
@@ -225,7 +225,7 @@ aws apigateway get-usage-plans
 3. **Test with Correct Key:**
 ```python
 import os
-os.environ['UNIVERSAL_S3_API_KEY'] = 'correct-api-key-here'
+os.environ['S3BRIDGE_API_KEY'] = 'correct-api-key-here'
 ```
 
 ## S3 Operation Issues
@@ -283,13 +283,13 @@ python scripts/add_service.py myservice "myservice-*" --permissions read-write
 
 ```bash
 # CloudFormation stack
-aws cloudformation describe-stacks --stack-name universal-s3-library
+aws cloudformation describe-stacks --stack-name s3bridge
 
 # Lambda functions
 aws lambda list-functions --query 'Functions[?starts_with(FunctionName, `universal`)]'
 
 # API Gateway
-aws apigateway get-rest-apis --query 'items[?name==`universal-s3-library`]'
+aws apigateway get-rest-apis --query 'items[?name==`s3bridge`]'
 
 # IAM roles
 aws iam list-roles --path-prefix /service-role/ --query 'Roles[?contains(RoleName, `s3-access`)]'
@@ -299,13 +299,13 @@ aws iam list-roles --path-prefix /service-role/ --query 'Roles[?contains(RoleNam
 
 ```bash
 # Test Lambda function directly
-aws lambda invoke --function-name universal-credential-service \
+aws lambda invoke --function-name s3bridge-credential-service \
   --payload '{"queryStringParameters":{"service":"test"}}' \
   response.json && cat response.json
 
 # Test API Gateway
-curl -H "X-API-Key: $UNIVERSAL_S3_API_KEY" \
-  "$(aws cloudformation describe-stacks --stack-name universal-s3-library \
+curl -H "X-API-Key: $S3BRIDGE_API_KEY" \
+  "$(aws cloudformation describe-stacks --stack-name s3bridge \
      --query 'Stacks[0].Outputs[?OutputKey==`ApiGatewayUrl`].OutputValue' --output text)/credentials?service=test"
 ```
 
@@ -313,7 +313,7 @@ curl -H "X-API-Key: $UNIVERSAL_S3_API_KEY" \
 
 ```bash
 # Lambda logs
-aws logs filter-log-events --log-group-name "/aws/lambda/universal-credential-service" \
+aws logs filter-log-events --log-group-name "/aws/lambda/s3bridge-credential-service" \
   --start-time $(date -d "1 hour ago" +%s)000
 
 # API Gateway logs (if enabled)
@@ -333,7 +333,7 @@ aws logs filter-log-events --log-group-name "API-Gateway-Execution-Logs_your-api
 1. **Check Network Connectivity:**
 ```bash
 # Test API Gateway response time
-time curl -H "X-API-Key: $UNIVERSAL_S3_API_KEY" \
+time curl -H "X-API-Key: $S3BRIDGE_API_KEY" \
   "your-api-gateway-url/credentials?service=test"
 ```
 
@@ -386,8 +386,8 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 # This will show detailed request/response information
-from universal_s3_library import UniversalS3Client
-client = UniversalS3Client("test-bucket", "test-service")
+from s3bridge import S3BridgeClient
+client = S3BridgeClient("test-bucket", "test-service")
 ```
 
 ### Collect Diagnostic Information
@@ -397,7 +397,7 @@ client = UniversalS3Client("test-bucket", "test-service")
 echo "=== AWS Configuration ===" > diagnostic.txt
 aws sts get-caller-identity >> diagnostic.txt
 echo -e "\n=== CloudFormation Stack ===" >> diagnostic.txt
-aws cloudformation describe-stacks --stack-name universal-s3-library >> diagnostic.txt
+aws cloudformation describe-stacks --stack-name s3bridge >> diagnostic.txt
 echo -e "\n=== Lambda Functions ===" >> diagnostic.txt
 aws lambda list-functions --query 'Functions[?starts_with(FunctionName, `universal`)]' >> diagnostic.txt
 echo -e "\n=== Environment Variables ===" >> diagnostic.txt

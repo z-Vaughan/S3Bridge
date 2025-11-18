@@ -365,7 +365,7 @@ class TestMockBackupRestore(MockAWSTestCase):
 class TestMockServiceTesting(MockAWSTestCase):
     """Test service testing with mocks"""
     
-    @patch('src.universal_auth.UniversalAuthProvider')
+    @patch('src.universal_auth.S3BridgeAuthProvider')
     def test_credential_testing(self, mock_auth_provider):
         """Test credential access testing"""
         # Mock successful credentials
@@ -385,7 +385,7 @@ class TestMockServiceTesting(MockAWSTestCase):
         mock_auth_provider.assert_called_once_with(self.test_service)
         mock_auth_instance.get_credentials.assert_called_once()
     
-    @patch('src.universal_s3_client.UniversalS3Client')
+    @patch('src.universal_s3_client.S3BridgeClient')
     def test_s3_operations_testing(self, mock_s3_client):
         """Test S3 operations testing"""
         # Mock successful S3 operations
@@ -434,7 +434,7 @@ def run_mock_tests():
 
 
 if __name__ == "__main__":
-    print("Running Universal S3 Library Mock AWS Tests...")
+    print("Running S3Bridge Mock AWS Tests...")
     success = run_mock_tests()
     
     if success:

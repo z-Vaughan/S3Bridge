@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Edit Service Script
-Modifies an existing service in the Universal S3 Library
+Modifies an existing service in the S3Bridge
 """
 
 import boto3
@@ -18,7 +18,7 @@ def get_current_service_config(service_name):
     """Get current service configuration"""
     try:
         lambda_client = boto3.client('lambda')
-        response = lambda_client.get_function_configuration(FunctionName='universal-credential-service')
+        response = lambda_client.get_function_configuration(FunctionName='s3bridge-credential-service')
         env_vars = response.get('Environment', {}).get('Variables', {})
         
         service_key = f"SERVICE_{service_name.upper()}"
@@ -78,7 +78,7 @@ def update_lambda_config(service_name, bucket_patterns, role_arn):
     
     try:
         # Get current environment variables
-        response = lambda_client.get_function_configuration(FunctionName='universal-credential-service')
+        response = lambda_client.get_function_configuration(FunctionName='s3bridge-credential-service')
         env_vars = response.get('Environment', {}).get('Variables', {})
         
         # Update service configuration
@@ -92,7 +92,7 @@ def update_lambda_config(service_name, bucket_patterns, role_arn):
         
         # Update Lambda function
         lambda_client.update_function_configuration(
-            FunctionName='universal-credential-service',
+            FunctionName='s3bridge-credential-service',
             Environment={'Variables': env_vars}
         )
         print(f"Updated Lambda configuration for {service_name}")
@@ -108,7 +108,7 @@ def edit_service(service_name, bucket_patterns=None, permissions=None):
     config = AWSConfig()
     
     if not config.is_deployed():
-        print("Universal S3 Library not deployed")
+        print("S3Bridge not deployed")
         return False
     
     # Get current configuration
@@ -150,7 +150,7 @@ def edit_service(service_name, bucket_patterns=None, permissions=None):
     return success
 
 def main():
-    parser = argparse.ArgumentParser(description='Edit existing service in Universal S3 Library')
+    parser = argparse.ArgumentParser(description='Edit existing service in S3Bridge')
     parser.add_argument('service_name', help='Service name to edit')
     parser.add_argument('--bucket-patterns', help='Comma-separated bucket patterns')
     parser.add_argument('--permissions', choices=['read-only', 'read-write', 'admin'], 

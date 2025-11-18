@@ -1,6 +1,6 @@
-# Setup Guide - Universal S3 Library
+# Setup Guide - S3Bridge
 
-Complete setup instructions for deploying the Universal S3 Library infrastructure.
+Complete setup instructions for deploying the S3Bridge infrastructure.
 
 ## Prerequisites
 
@@ -12,8 +12,8 @@ Complete setup instructions for deploying the Universal S3 Library infrastructur
 
 ```bash
 # 1. Clone repository
-git clone <repository-url> universal_s3_library
-cd universal_s3_library
+git clone <repository-url> s3bridge
+cd s3bridge
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -22,7 +22,7 @@ pip install -r requirements.txt
 python scripts/setup.py --admin-user your-username
 
 # 4. Set API key (from setup output)
-export UNIVERSAL_S3_API_KEY=your-api-key-here
+export S3BRIDGE_API_KEY=your-api-key-here
 
 # 5. Add your first service
 python scripts/add_service.py myapp "myapp-*" --permissions read-write
@@ -52,13 +52,13 @@ Set the API key as an environment variable:
 
 ```bash
 # Linux/macOS
-export UNIVERSAL_S3_API_KEY=your-api-key-here
+export S3BRIDGE_API_KEY=your-api-key-here
 
 # Windows
-set UNIVERSAL_S3_API_KEY=your-api-key-here
+set S3BRIDGE_API_KEY=your-api-key-here
 
 # PowerShell
-$env:UNIVERSAL_S3_API_KEY="your-api-key-here"
+$env:S3BRIDGE_API_KEY="your-api-key-here"
 ```
 
 **Alternative**: Store in application configuration or deployment config file.
@@ -82,7 +82,7 @@ python scripts/add_service.py admin "*" --permissions admin
 
 ### CloudFormation Resources
 
-- **Lambda Function**: `universal-credential-service`
+- **Lambda Function**: `s3bridge-credential-service`
 - **API Gateway**: REST API with API key authentication
 - **IAM Roles**: Lambda execution role and service-specific roles
 - **API Key**: For client authentication
@@ -121,10 +121,10 @@ Options:
 Test your deployment:
 
 ```python
-from universal_s3_library import UniversalS3Client
+from s3bridge import S3BridgeClient
 
 # Test with your service
-client = UniversalS3Client("test-bucket", "your-service")
+client = S3BridgeClient("test-bucket", "your-service")
 success = client.write_json({"test": "data"}, "test.json")
 print(f"Test successful: {success}")
 ```
@@ -136,10 +136,10 @@ print(f"Test successful: {success}")
 **API Key Not Found**:
 ```bash
 # Check environment variable
-echo $UNIVERSAL_S3_API_KEY
+echo $S3BRIDGE_API_KEY
 
 # Or get from CloudFormation
-aws cloudformation describe-stacks --stack-name universal-s3-library \
+aws cloudformation describe-stacks --stack-name s3bridge \
   --query 'Stacks[0].Outputs[?OutputKey==`ApiKey`].OutputValue' --output text
 ```
 
@@ -155,14 +155,14 @@ aws cloudformation describe-stacks --stack-name universal-s3-library \
 
 ```bash
 # Check CloudFormation stack
-aws cloudformation describe-stacks --stack-name universal-s3-library
+aws cloudformation describe-stacks --stack-name s3bridge
 
 # Test Lambda function
-aws lambda invoke --function-name universal-credential-service \
+aws lambda invoke --function-name s3bridge-credential-service \
   --payload '{"queryStringParameters":{"service":"test"}}' response.json
 
 # View logs
-aws logs filter-log-events --log-group-name "/aws/lambda/universal-credential-service"
+aws logs filter-log-events --log-group-name "/aws/lambda/s3bridge-credential-service"
 ```
 
 ## Security Considerations
@@ -177,7 +177,7 @@ aws logs filter-log-events --log-group-name "/aws/lambda/universal-credential-se
 To remove the infrastructure:
 
 ```bash
-aws cloudformation delete-stack --stack-name universal-s3-library
+aws cloudformation delete-stack --stack-name s3bridge
 ```
 
 **Note**: This will delete all Lambda functions, API Gateway, and IAM roles created by the setup.

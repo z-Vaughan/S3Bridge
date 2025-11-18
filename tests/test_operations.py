@@ -1,5 +1,5 @@
 """
-Test Suite for Universal S3 Library Operations
+Test Suite for S3Bridge Operations
 Tests all service management operations
 """
 
@@ -195,7 +195,7 @@ class TestServiceOperations(unittest.TestCase):
     def test_test_service(self, mock_boto3):
         """Test test_service operation"""
         # Mock successful credential test
-        with patch('src.universal_auth.UniversalAuthProvider') as mock_auth:
+        with patch('src.universal_auth.S3BridgeAuthProvider') as mock_auth:
             mock_auth_instance = Mock()
             mock_auth_instance.get_credentials.return_value = {
                 'access_key': 'AKIA123',
@@ -213,7 +213,7 @@ class TestServiceOperations(unittest.TestCase):
             self.assertTrue(result)
         
         # Mock S3 client test
-        with patch('src.universal_s3_client.UniversalS3Client') as mock_s3:
+        with patch('src.universal_s3_client.S3BridgeClient') as mock_s3:
             mock_s3_instance = Mock()
             mock_s3_instance.write_json.return_value = True
             mock_s3_instance.read_json.return_value = {'service': self.test_service, 'test': True}
@@ -231,7 +231,7 @@ class TestServiceOperations(unittest.TestCase):
 
 
 class TestAuthProvider(unittest.TestCase):
-    """Test authentication provider"""
+    """Test S3Bridge authentication provider"""
     
     def setUp(self):
         """Set up test environment"""
@@ -240,23 +240,23 @@ class TestAuthProvider(unittest.TestCase):
     def test_auth_provider_init(self):
         """Test auth provider initialization"""
         try:
-            from src.universal_auth import UniversalAuthProvider
+            from src.universal_auth import S3BridgeAuthProvider
         except ImportError:
             self.skipTest("universal_auth module not available")
         
-        auth = UniversalAuthProvider(self.service_name)
+        auth = S3BridgeAuthProvider(self.service_name)
         self.assertEqual(auth.service_name, self.service_name)
         self.assertIsNone(auth._cached_credentials)
     
-    @patch.dict(os.environ, {'UNIVERSAL_S3_API_KEY': 'test-key-123'})
+    @patch.dict(os.environ, {'S3BRIDGE_API_KEY': 'test-key-123'})
     def test_api_key_from_env(self):
         """Test API key retrieval from environment"""
         try:
-            from src.universal_auth import UniversalAuthProvider
+            from src.universal_auth import S3BridgeAuthProvider
         except ImportError:
             self.skipTest("universal_auth module not available")
         
-        auth = UniversalAuthProvider(self.service_name)
+        auth = S3BridgeAuthProvider(self.service_name)
         
         # Mock the config to avoid AWS calls
         with patch.object(auth, '_config') as mock_config:
@@ -270,7 +270,7 @@ class TestAuthProvider(unittest.TestCase):
     def test_get_credentials_success(self, mock_get):
         """Test successful credential retrieval"""
         try:
-            from src.universal_auth import UniversalAuthProvider
+            from src.universal_auth import S3BridgeAuthProvider
         except ImportError:
             self.skipTest("universal_auth module not available")
         from datetime import datetime, timezone
@@ -286,7 +286,7 @@ class TestAuthProvider(unittest.TestCase):
         }
         mock_get.return_value = mock_response
         
-        auth = UniversalAuthProvider(self.service_name)
+        auth = S3BridgeAuthProvider(self.service_name)
         
         with patch.object(auth, '_config') as mock_config:
             mock_config.is_deployed.return_value = True
@@ -302,12 +302,12 @@ class TestAuthProvider(unittest.TestCase):
     def test_credentials_caching(self):
         """Test credential caching behavior"""
         try:
-            from src.universal_auth import UniversalAuthProvider
+            from src.universal_auth import S3BridgeAuthProvider
         except ImportError:
             self.skipTest("universal_auth module not available")
         from datetime import datetime, timezone, timedelta
         
-        auth = UniversalAuthProvider(self.service_name)
+        auth = S3BridgeAuthProvider(self.service_name)
         
         # Set up cached credentials
         auth._cached_credentials = {
@@ -335,30 +335,30 @@ class TestS3Client(unittest.TestCase):
     def test_s3_client_init(self):
         """Test S3 client initialization"""
         try:
-            from src.universal_s3_client import UniversalS3Client
+            from src.universal_s3_client import S3BridgeClient
         except ImportError:
             self.skipTest("universal_s3_client module not available")
         
         # Test with universal service (should allow any bucket)
-        client = UniversalS3Client("any-bucket", "universal")
+        client = S3BridgeClient("any-bucket", "universal")
         self.assertEqual(client.bucket_name, "any-bucket")
         self.assertEqual(client.service_name, "universal")
     
     def test_bucket_validation(self):
         """Test bucket access validation"""
         try:
-            from src.universal_s3_client import UniversalS3Client
+            from src.universal_s3_client import S3BridgeClient
         except ImportError:
             self.skipTest("universal_s3_client module not available")
         
         # Test invalid bucket for analytics service
         with self.assertRaises(ValueError):
-            UniversalS3Client("invalid-bucket", "analytics")
+            S3BridgeClient("invalid-bucket", "analytics")
         
         # Test valid pattern matching
         try:
             # This should work for universal service
-            client = UniversalS3Client("test-bucket", "universal")
+            client = S3BridgeClient("test-bucket", "universal")
             self.assertIsNotNone(client)
         except ValueError:
             # Expected if service patterns don't match
@@ -368,7 +368,7 @@ class TestS3Client(unittest.TestCase):
     def test_s3_operations(self, mock_boto3):
         """Test S3 operations with mocked client"""
         try:
-            from src.universal_s3_client import UniversalS3Client
+            from src.universal_s3_client import S3BridgeClient
         except ImportError:
             self.skipTest("universal_s3_client module not available")
         
@@ -385,7 +385,7 @@ class TestS3Client(unittest.TestCase):
             {'Contents': [{'Key': 'test/file1.json'}, {'Key': 'test/file2.json'}]}
         ]
         
-        client = UniversalS3Client("test-bucket", "universal")
+        client = S3BridgeClient("test-bucket", "universal")
         
         # Mock auth provider
         with patch.object(client.auth_provider, 'get_credentials') as mock_creds:
@@ -411,11 +411,11 @@ class TestS3Client(unittest.TestCase):
     def test_s3_error_handling(self):
         """Test S3 error handling"""
         try:
-            from src.universal_s3_client import UniversalS3Client
+            from src.universal_s3_client import S3BridgeClient
         except ImportError:
             self.skipTest("universal_s3_client module not available")
         
-        client = UniversalS3Client("test-bucket", "universal")
+        client = S3BridgeClient("test-bucket", "universal")
         
         # Mock auth provider to raise exception
         with patch.object(client.auth_provider, 'get_credentials') as mock_creds:
@@ -540,13 +540,13 @@ class TestErrorHandling(unittest.TestCase):
     def test_missing_environment_variables(self):
         """Test behavior when environment variables are missing"""
         try:
-            from src.universal_auth import UniversalAuthProvider
+            from src.universal_auth import S3BridgeAuthProvider
         except ImportError:
             self.skipTest("universal_auth module not available")
         
         # Clear environment
         with patch.dict(os.environ, {}, clear=True):
-            auth = UniversalAuthProvider("test")
+            auth = S3BridgeAuthProvider("test")
             
             with patch.object(auth, '_config') as mock_config:
                 mock_config.is_deployed.return_value = True
@@ -560,22 +560,22 @@ class TestErrorHandling(unittest.TestCase):
     def test_invalid_service_patterns(self):
         """Test invalid service patterns"""
         try:
-            from src.universal_s3_client import UniversalS3Client
+            from src.universal_s3_client import S3BridgeClient
         except ImportError:
             self.skipTest("universal_s3_client module not available")
         
         # Test with non-existent service
         with self.assertRaises(ValueError):
-            UniversalS3Client("test-bucket", "nonexistent-service")
+            S3BridgeClient("test-bucket", "nonexistent-service")
     
     def test_network_failures(self):
         """Test network failure handling"""
         try:
-            from src.universal_auth import UniversalAuthProvider
+            from src.universal_auth import S3BridgeAuthProvider
         except ImportError:
             self.skipTest("universal_auth module not available")
         
-        auth = UniversalAuthProvider("test")
+        auth = S3BridgeAuthProvider("test")
         
         with patch.object(auth, '_config') as mock_config:
             mock_config.is_deployed.return_value = True
@@ -588,7 +588,7 @@ class TestErrorHandling(unittest.TestCase):
                     with self.assertRaises(Exception) as context:
                         auth.get_credentials()
                     
-                    self.assertIn('Universal credential service failed', str(context.exception))
+                    self.assertIn('S3Bridge credential service failed', str(context.exception))
 
 
 def run_all_tests():
@@ -612,7 +612,7 @@ def run_all_tests():
 
 
 if __name__ == "__main__":
-    print("Running Universal S3 Library Operation Tests...")
+    print("Running S3Bridge Operation Tests...")
     print("=" * 60)
     
     success = run_all_tests()

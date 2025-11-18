@@ -1,6 +1,6 @@
-# Service Management Operations - Universal S3 Library
+# Service Management Operations - S3Bridge
 
-Complete guide for managing services with the expanded Universal S3 Library feature set.
+Complete guide for managing services with the expanded S3Bridge feature set.
 
 ## Available Operations
 
@@ -291,4 +291,4 @@ python scripts/backup_restore.py restore last_good_backup.json --dry-run
 python scripts/backup_restore.py restore last_good_backup.json
 ```
 
-This expanded feature set provides comprehensive service lifecycle management for the Universal S3 Library, making it production-ready for enterprise environments.
+This expanded feature set provides comprehensive service lifecycle management for the S3Bridge, making it production-ready for enterprise environments.

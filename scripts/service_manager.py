@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Service Manager CLI
-Unified command-line interface for Universal S3 Library service management
+Unified command-line interface for S3Bridge service management
 """
 
 import argparse
@@ -17,7 +17,7 @@ def run_script(script_name, args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Universal S3 Library Service Manager',
+        description='S3Bridge Service Manager',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

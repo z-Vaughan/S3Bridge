@@ -15,14 +15,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config.aws_config import AWSConfig
 
 def find_existing_api_gateway():
-    """Find existing API Gateway that uses universal-credential-service"""
+    """Find existing API Gateway that uses s3bridge-credential-service"""
     try:
         api_client = boto3.client('apigateway')
         lambda_client = boto3.client('lambda')
         
-        # Get universal-credential-service function ARN
+        # Get s3bridge-credential-service function ARN
         try:
-            func_response = lambda_client.get_function(FunctionName='universal-credential-service')
+            func_response = lambda_client.get_function(FunctionName='s3bridge-credential-service')
             target_function_arn = func_response['Configuration']['FunctionArn']
         except lambda_client.exceptions.ResourceNotFoundException:
             return None
@@ -49,7 +49,7 @@ def find_existing_api_gateway():
                             
                             # Check if integration points to our Lambda function
                             integration_uri = integration.get('uri', '')
-                            if 'universal-credential-service' in integration_uri:
+                            if 's3bridge-credential-service' in integration_uri:
                                 return api_id
                                 
                         except Exception:
@@ -111,7 +111,7 @@ def create_service_role(service_name, bucket_patterns, permissions, config):
             RoleName=role_name,
             Path='/service-role/',
             AssumeRolePolicyDocument=json.dumps(trust_policy),
-            Description=f"Universal S3 Library service role for {service_name}"
+            Description=f"S3Bridge service role for {service_name}"
         )
         
         # Attach policy
@@ -188,7 +188,7 @@ def update_lambda_config_only(service_name, bucket_patterns, role_arn):
         
         try:
             lambda_client.update_function_code(
-                FunctionName='universal-credential-service',
+                FunctionName='s3bridge-credential-service',
                 ZipFile=zip_buffer.getvalue()
             )
             print(f"Updated Lambda function code for service: {service_name}")
@@ -198,14 +198,14 @@ def update_lambda_config_only(service_name, bucket_patterns, role_arn):
         print(f"Could not find service_roles dictionary in Lambda code")
 
 def add_service(service_name, bucket_patterns, permissions='read-write'):
-    """Add new service to Universal S3 Library"""
+    """Add new service to S3Bridge"""
     
     config = AWSConfig()
     
     # Check if infrastructure is deployed (either CloudFormation or existing API Gateway)
     existing_api = find_existing_api_gateway()
     if not config.is_deployed() and not existing_api:
-        print("Universal S3 Library not deployed. Run setup first:")
+        print("S3Bridge not deployed. Run setup first:")
         print("   python scripts/setup.py")
         return False
     
@@ -244,8 +244,8 @@ def add_service(service_name, bucket_patterns, permissions='read-write'):
         print(f"Service '{service_name}' added successfully!")
         print(f"API Endpoint: https://{existing_api}.execute-api.us-east-1.amazonaws.com/prod/credentials")
         print(f"Usage example:")
-        print(f"   from universal_s3_library import UniversalS3Client")
-        print(f"   client = UniversalS3Client('your-bucket', '{service_name}')")
+        print(f"   from s3bridge import S3BridgeClient")
+        print(f"   client = S3BridgeClient('your-bucket', '{service_name}')")
         
         return True
         
@@ -254,7 +254,7 @@ def add_service(service_name, bucket_patterns, permissions='read-write'):
         return False
 
 def main():
-    parser = argparse.ArgumentParser(description='Add service to Universal S3 Library')
+    parser = argparse.ArgumentParser(description='Add service to S3Bridge')
     parser.add_argument('service_name', help='Service name (e.g., analytics, webapp)')
     parser.add_argument('bucket_patterns', help='Comma-separated bucket patterns (e.g., "app-*,*-data")')
     parser.add_argument('--permissions', choices=['read-only', 'read-write', 'admin'], 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 List Services Script
-Shows all configured services in the Universal S3 Library
+Shows all configured services in the S3Bridge
 """
 
 import boto3
@@ -17,7 +17,7 @@ def get_service_config():
     """Load service configuration from Lambda environment variables"""
     try:
         lambda_client = boto3.client('lambda')
-        response = lambda_client.get_function(FunctionName='universal-credential-service')
+        response = lambda_client.get_function(FunctionName='s3bridge-credential-service')
         
         env_vars = response['Configuration'].get('Environment', {}).get('Variables', {})
         
@@ -34,7 +34,7 @@ def get_service_config():
         account_id = env_vars.get('AWS_ACCOUNT_ID')
         if account_id:
             services['universal'] = {
-                'role': f"arn:aws:iam::{account_id}:role/service-role/universal-s3-access-role",
+                'role': f"arn:aws:iam::{account_id}:role/service-role/s3bridge-access-role",
                 'buckets': ['*']
             }
         
@@ -70,7 +70,7 @@ def list_services():
     
     config = AWSConfig()
     
-    print("Universal S3 Library - Service Registry")
+    print("S3Bridge - Service Registry")
     print(f"Account: {config.account_id}")
     print(f"Region: {config.region}")
     print()

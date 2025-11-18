@@ -1,15 +1,15 @@
-# API Reference - Universal S3 Library
+# API Reference - S3Bridge
 
-Complete API documentation for the Universal S3 Library.
+Complete API documentation for the S3Bridge.
 
-## UniversalS3Client
+## S3BridgeClient
 
 Main client class for S3 operations with automatic credential management.
 
 ### Constructor
 
 ```python
-UniversalS3Client(bucket_name: str, service_name: str)
+S3BridgeClient(bucket_name: str, service_name: str)
 ```
 
 **Parameters:**
@@ -18,9 +18,9 @@ UniversalS3Client(bucket_name: str, service_name: str)
 
 **Example:**
 ```python
-from universal_s3_library import UniversalS3Client
+from s3bridge import S3BridgeClient
 
-client = UniversalS3Client("my-app-data", "webapp")
+client = S3BridgeClient("my-app-data", "webapp")
 ```
 
 ### File Operations
@@ -129,14 +129,14 @@ if success:
     print("File deleted successfully")
 ```
 
-## UniversalAuthProvider
+## S3BridgeAuthProvider
 
 Authentication provider for managing AWS credentials.
 
 ### Constructor
 
 ```python
-UniversalAuthProvider(service_name: str = "default")
+S3BridgeAuthProvider(service_name: str = "default")
 ```
 
 **Parameters:**
@@ -149,9 +149,9 @@ UniversalAuthProvider(service_name: str = "default")
 Get current AWS credentials (with automatic refresh).
 
 ```python
-from universal_s3_library import UniversalAuthProvider
+from s3bridge import S3BridgeAuthProvider
 
-auth = UniversalAuthProvider("webapp")
+auth = S3BridgeAuthProvider("webapp")
 creds = auth.get_credentials()
 
 # Returns:
@@ -193,10 +193,10 @@ auth.reset_authentication()
 ### Common Exceptions
 
 ```python
-from universal_s3_library import UniversalS3Client
+from s3bridge import S3BridgeClient
 
 try:
-    client = UniversalS3Client("restricted-bucket", "analytics")
+    client = S3BridgeClient("restricted-bucket", "analytics")
     data = client.read_json("sensitive/data.json")
 except ValueError as e:
     # Bucket access validation errors
@@ -221,7 +221,7 @@ except Exception as e:
 ```python
 class AppConfig:
     def __init__(self, bucket_name: str, service_name: str):
-        self.client = UniversalS3Client(bucket_name, service_name)
+        self.client = S3BridgeClient(bucket_name, service_name)
         self.config_key = "config/app.json"
     
     def load_config(self) -> dict:
@@ -242,7 +242,7 @@ db_url = config.get_setting("database_url", "localhost:5432")
 ### Batch Operations
 
 ```python
-def process_files(client: UniversalS3Client, prefix: str):
+def process_files(client: S3BridgeClient, prefix: str):
     """Process all files with given prefix"""
     files = client.list_objects(prefix)
     
@@ -258,7 +258,7 @@ def process_files(client: UniversalS3Client, prefix: str):
                 client.write_json(processed, output_key)
 
 # Usage
-client = UniversalS3Client("data-bucket", "processor")
+client = S3BridgeClient("data-bucket", "processor")
 process_files(client, "input/")
 ```
 
@@ -269,7 +269,7 @@ import asyncio
 import concurrent.futures
 from typing import List
 
-async def upload_files_async(client: UniversalS3Client, files: List[tuple]):
+async def upload_files_async(client: S3BridgeClient, files: List[tuple]):
     """Upload multiple files concurrently"""
     loop = asyncio.get_event_loop()
     
@@ -289,7 +289,7 @@ files_to_upload = [
     ("local3.txt", "uploads/file3.txt")
 ]
 
-client = UniversalS3Client("upload-bucket", "uploader")
+client = S3BridgeClient("upload-bucket", "uploader")
 results = asyncio.run(upload_files_async(client, files_to_upload))
 print(f"Uploaded {sum(results)} files successfully")
 ```
@@ -302,36 +302,36 @@ print(f"Uploaded {sum(results)} files successfully")
 import os
 
 # Set via environment variable
-os.environ['UNIVERSAL_S3_API_KEY'] = 'your-api-key-here'
+os.environ['S3BRIDGE_API_KEY'] = 'your-api-key-here'
 
 # Or load from config file
 def load_api_key():
     try:
         with open('.env', 'r') as f:
             for line in f:
-                if line.startswith('UNIVERSAL_S3_API_KEY='):
+                if line.startswith('S3BRIDGE_API_KEY='):
                     return line.split('=', 1)[1].strip()
     except FileNotFoundError:
         pass
     return None
 
-if not os.environ.get('UNIVERSAL_S3_API_KEY'):
+if not os.environ.get('S3BRIDGE_API_KEY'):
     api_key = load_api_key()
     if api_key:
-        os.environ['UNIVERSAL_S3_API_KEY'] = api_key
+        os.environ['S3BRIDGE_API_KEY'] = api_key
 ```
 
 ### Service Configuration
 
 ```python
 # Development
-dev_client = UniversalS3Client("myapp-dev-data", "myapp-dev")
+dev_client = S3BridgeClient("myapp-dev-data", "myapp-dev")
 
 # Staging  
-staging_client = UniversalS3Client("myapp-staging-data", "myapp-staging")
+staging_client = S3BridgeClient("myapp-staging-data", "myapp-staging")
 
 # Production
-prod_client = UniversalS3Client("myapp-prod-data", "myapp-prod")
+prod_client = S3BridgeClient("myapp-prod-data", "myapp-prod")
 ```
 
 ## Performance Considerations
@@ -347,7 +347,7 @@ Credentials are automatically cached and refreshed:
 
 ```python
 # For large files, use download_file instead of read_text
-client = UniversalS3Client("large-data", "processor")
+client = S3BridgeClient("large-data", "processor")
 
 # Good: Downloads to local file
 client.download_file("large_dataset.csv", "local_dataset.csv")

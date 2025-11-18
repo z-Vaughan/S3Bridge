@@ -20,7 +20,7 @@ def get_service_config():
     
     # Add universal service
     config['universal'] = {
-        'role': f"arn:aws:iam::{os.environ['AWS_ACCOUNT_ID']}:role/service-role/universal-s3-access-role",
+        'role': f"arn:aws:iam::{os.environ['AWS_ACCOUNT_ID']}:role/service-role/s3bridge-access-role",
         'buckets': ['*']
     }
     
@@ -28,7 +28,7 @@ def get_service_config():
 
 def lambda_handler(event, context):
     """
-    Universal credential service - returns temporary AWS credentials for registered services
+    S3Bridge credential service - returns temporary AWS credentials for registered services
     """
     
     try:

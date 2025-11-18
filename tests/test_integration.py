@@ -1,5 +1,5 @@
 """
-Integration Tests for Universal S3 Library
+Integration Tests for S3Bridge
 Tests operations against mock AWS services
 """
 
@@ -140,11 +140,11 @@ class TestErrorHandling(unittest.TestCase):
     
     def test_invalid_bucket_patterns(self):
         """Test validation of bucket patterns"""
-        from src.universal_s3_client import UniversalS3Client
+        from src.universal_s3_client import S3BridgeClient
         
         # Test invalid service/bucket combination
         with self.assertRaises(ValueError):
-            UniversalS3Client("unauthorized-bucket", "analytics")
+            S3BridgeClient("unauthorized-bucket", "analytics")
 
 class TestBackupRestoreIntegration(unittest.TestCase):
     """Integration tests for backup/restore functionality"""
@@ -273,8 +273,8 @@ class TestPerformanceMonitoring(unittest.TestCase):
 class TestServiceTesting(unittest.TestCase):
     """Test service testing functionality"""
     
-    @patch('src.universal_auth.UniversalAuthProvider')
-    @patch('src.universal_s3_client.UniversalS3Client')
+    @patch('src.universal_auth.S3BridgeAuthProvider')
+    @patch('src.universal_s3_client.S3BridgeClient')
     def test_comprehensive_service_test(self, mock_s3_client, mock_auth_provider):
         """Test comprehensive service testing"""
         
@@ -321,7 +321,7 @@ def run_integration_tests():
 
 
 if __name__ == "__main__":
-    print("Running Universal S3 Library Integration Tests...")
+    print("Running S3Bridge Integration Tests...")
     success = run_integration_tests()
     
     if success:

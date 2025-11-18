@@ -15,8 +15,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config.aws_config import AWSConfig
 
-class UniversalAuthProvider:
-    """Universal authentication provider for AWS credentials via API key"""
+class S3BridgeAuthProvider:
+    """S3Bridge authentication provider for AWS credentials via API key"""
     
     def __init__(self, service_name: str = "default"):
         """
@@ -48,7 +48,7 @@ class UniversalAuthProvider:
         
         # Check if infrastructure is deployed
         if not self._config.is_deployed():
-            raise Exception("Universal S3 Library not deployed. Run: python -m universal_s3_library.setup")
+            raise Exception("S3Bridge not deployed. Run: python -m s3bridge.setup")
         
         # Get API Gateway URL
         api_url = self._config.get_api_gateway_url()
@@ -87,13 +87,13 @@ class UniversalAuthProvider:
                 raise Exception(f"Credential service failed with status {response.status_code}: {response.text}")
                 
         except Exception as e:
-            raise Exception(f"Universal credential service failed: {str(e)}")
+            raise Exception(f"S3Bridge credential service failed: {str(e)}")
     
     def _get_api_key(self) -> str:
         """Get API key from configuration or environment"""
         
         # Try environment variable first
-        api_key = os.environ.get('UNIVERSAL_S3_API_KEY')
+        api_key = os.environ.get('S3BRIDGE_API_KEY')
         if api_key:
             return api_key
         
@@ -122,7 +122,7 @@ class UniversalAuthProvider:
         except Exception:
             pass
         
-        raise Exception("API key not found. Set UNIVERSAL_S3_API_KEY environment variable or redeploy infrastructure.")
+        raise Exception("API key not found. Set S3BRIDGE_API_KEY environment variable or redeploy infrastructure.")
     
     def invalidate_credentials(self):
         """Force refresh of cached credentials"""

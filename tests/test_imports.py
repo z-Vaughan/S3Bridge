@@ -19,8 +19,8 @@ def test_imports():
     
     try:
         # Test src imports
-        from src.universal_auth import UniversalAuthProvider
-        from src.universal_s3_client import UniversalS3Client
+        from src.universal_auth import S3BridgeAuthProvider
+        from src.universal_s3_client import S3BridgeClient
         from config.aws_config import AWSConfig
         print("[OK] src imports work")
     except ImportError as e:

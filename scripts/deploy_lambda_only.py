@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Deploy only Lambda functions without touching API Gateway
-For Universal S3 Library
+For S3Bridge
 """
 
 import boto3

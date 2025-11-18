@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Remove Service Script
-Removes a service from the Universal S3 Library
+Removes a service from the S3Bridge
 """
 
 import boto3
@@ -44,7 +44,7 @@ def update_lambda_config(service_name):
     
     try:
         # Get current environment variables
-        response = lambda_client.get_function_configuration(FunctionName='universal-credential-service')
+        response = lambda_client.get_function_configuration(FunctionName='s3bridge-credential-service')
         env_vars = response.get('Environment', {}).get('Variables', {})
         
         # Remove service environment variable
@@ -54,7 +54,7 @@ def update_lambda_config(service_name):
             
             # Update Lambda function
             lambda_client.update_function_configuration(
-                FunctionName='universal-credential-service',
+                FunctionName='s3bridge-credential-service',
                 Environment={'Variables': env_vars}
             )
             print(f"Removed service from Lambda configuration")
@@ -68,12 +68,12 @@ def update_lambda_config(service_name):
         return False
 
 def remove_service(service_name, force=False):
-    """Remove service from Universal S3 Library"""
+    """Remove service from S3Bridge"""
     
     config = AWSConfig()
     
     if not config.is_deployed():
-        print("Universal S3 Library not deployed")
+        print("S3Bridge not deployed")
         return False
     
     print(f"Removing service: {service_name}")
@@ -104,7 +104,7 @@ def remove_service(service_name, force=False):
     return success
 
 def main():
-    parser = argparse.ArgumentParser(description='Remove service from Universal S3 Library')
+    parser = argparse.ArgumentParser(description='Remove service from S3Bridge')
     parser.add_argument('service_name', help='Service name to remove')
     parser.add_argument('--force', action='store_true', help='Skip confirmation prompt')
     

@@ -1,4 +1,4 @@
-# Universal S3 Library Documentation
+# S3Bridge Documentation
 
 A modular, account-agnostic credential service for secure S3 access across multiple applications and AWS accounts using API key authentication.
 
@@ -14,14 +14,14 @@ A modular, account-agnostic credential service for secure S3 access across multi
 ## Quick Start
 
 ```python
-from universal_s3_library import UniversalS3Client
+from s3bridge import S3BridgeClient
 
 # Set API key (from deployment)
 import os
-os.environ['UNIVERSAL_S3_API_KEY'] = 'your-api-key-here'
+os.environ['S3BRIDGE_API_KEY'] = 'your-api-key-here'
 
 # Choose appropriate service tier for your use case
-s3_client = UniversalS3Client(
+s3_client = S3BridgeClient(
     bucket_name="your-bucket-name",
     service_name="analytics"  # Options: analytics, universal, custom services
 )
@@ -44,7 +44,7 @@ config = s3_client.read_json("config/settings.json")
 1. Clone the repository to your project
 2. Install dependencies: `pip install -r requirements.txt`
 3. Deploy infrastructure: `python scripts/setup.py --admin-user <username>`
-4. Set API key: `export UNIVERSAL_S3_API_KEY=<key-from-setup>`
+4. Set API key: `export S3BRIDGE_API_KEY=<key-from-setup>`
 
 **No IAM roles, policies, or AWS configuration required for your application.**
 
@@ -59,13 +59,13 @@ The library provides **temporary AWS credentials** through a centralized service
 5. **Refresh**: Automatic credential renewal before expiration
 
 **Deployed Infrastructure**:
-- **Credential Service**: `universal-credential-service` Lambda
+- **Credential Service**: `s3bridge-credential-service` Lambda
 - **API Gateway**: With API key authentication
 - **IAM Roles**: Service-specific roles with least privilege access
 
 ## API Reference
 
-### UniversalS3Client
+### S3BridgeClient
 
 #### Core Methods
 - `file_exists(key)` - Check if file exists
@@ -78,7 +78,7 @@ The library provides **temporary AWS credentials** through a centralized service
 - `list_objects(prefix)` - List objects with prefix
 - `delete_object(key)` - Delete object
 
-### UniversalAuthProvider
+### S3BridgeAuthProvider
 
 #### Methods
 - `get_credentials()` - Get current AWS credentials
@@ -92,13 +92,13 @@ This library serves as the **central credential provider** for multiple applicat
 
 ```python
 # Analytics Application (read-only analytics buckets)
-analytics_client = UniversalS3Client("company-analytics-data", "analytics")
+analytics_client = S3BridgeClient("company-analytics-data", "analytics")
 
 # General Applications (custom bucket patterns)
-app_client = UniversalS3Client("app-data-bucket", "myapp")
+app_client = S3BridgeClient("app-data-bucket", "myapp")
 
 # Admin Application (full access)
-admin_client = UniversalS3Client("any-bucket", "universal")
+admin_client = S3BridgeClient("any-bucket", "universal")
 ```
 
 **Security Tiers**:
@@ -130,7 +130,7 @@ The library handles common scenarios:
 
 ## Adding New Services
 
-See [SERVICES.md](SERVICES.md) for complete guide on adding new service tiers to the Universal S3 Library.
+See [SERVICES.md](SERVICES.md) for complete guide on adding new service tiers to the S3Bridge.
 
 ## Production Features
 

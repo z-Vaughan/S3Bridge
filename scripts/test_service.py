@@ -16,11 +16,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 def test_service_credentials(service_name):
     """Test if service can obtain credentials"""
     try:
-        from src.universal_auth import UniversalAuthProvider
+        from src.universal_auth import S3BridgeAuthProvider
         
         print(f"Testing credential access for service: {service_name}")
         
-        auth = UniversalAuthProvider(service_name)
+        auth = S3BridgeAuthProvider(service_name)
         credentials = auth.get_credentials()
         
         if credentials and all(k in credentials for k in ['access_key', 'secret_key', 'session_token']):
@@ -38,12 +38,12 @@ def test_service_credentials(service_name):
 def test_s3_operations(service_name, bucket_name, test_key="test/service_test.json"):
     """Test S3 operations with service"""
     try:
-        from src.universal_s3_client import UniversalS3Client
+        from src.universal_s3_client import S3BridgeClient
         
         print(f"Testing S3 operations for service: {service_name}")
         print(f"   Bucket: {bucket_name}")
         
-        client = UniversalS3Client(bucket_name, service_name)
+        client = S3BridgeClient(bucket_name, service_name)
         
         # Test data
         test_data = {
@@ -100,14 +100,14 @@ def test_s3_operations(service_name, bucket_name, test_key="test/service_test.js
 def test_bucket_validation(service_name, valid_bucket, invalid_bucket):
     """Test bucket access validation"""
     try:
-        from src.universal_s3_client import UniversalS3Client
+        from src.universal_s3_client import S3BridgeClient
         
         print(f"Testing bucket validation for service: {service_name}")
         
         # Test valid bucket
         print(f"   Testing valid bucket: {valid_bucket}")
         try:
-            client = UniversalS3Client(valid_bucket, service_name)
+            client = S3BridgeClient(valid_bucket, service_name)
             print("   Valid bucket accepted")
         except ValueError:
             print("   Valid bucket rejected")
@@ -116,7 +116,7 @@ def test_bucket_validation(service_name, valid_bucket, invalid_bucket):
         # Test invalid bucket
         print(f"   Testing invalid bucket: {invalid_bucket}")
         try:
-            client = UniversalS3Client(invalid_bucket, service_name)
+            client = S3BridgeClient(invalid_bucket, service_name)
             print("   Invalid bucket accepted (security issue!)")
             return False
         except ValueError:
@@ -173,7 +173,7 @@ def run_comprehensive_test(service_name, bucket_name):
         return False
 
 def main():
-    parser = argparse.ArgumentParser(description='Test Universal S3 Library service')
+    parser = argparse.ArgumentParser(description='Test S3Bridge service')
     parser.add_argument('service_name', help='Service name to test')
     parser.add_argument('bucket_name', help='Bucket name for testing')
     parser.add_argument('--credentials-only', action='store_true', 

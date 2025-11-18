@@ -1,4 +1,4 @@
-# Universal S3 Library
+# S3Bridge
 
 A modular, account-agnostic credential service for secure S3 access across multiple applications and AWS accounts.
 
@@ -6,24 +6,24 @@ A modular, account-agnostic credential service for secure S3 access across multi
 
 ```bash
 # Install
-pip install universal-s3-library
+pip install s3bridge
 
 # Setup infrastructure (one-time per AWS account)
-python -m universal_s3_library.setup --admin-user myusername
+python -m s3bridge.setup --admin-user myusername
 
 # Set API key (from setup output)
-export UNIVERSAL_S3_API_KEY=your-api-key-here
+export S3BRIDGE_API_KEY=your-api-key-here
 
 # Add services
-python -m universal_s3_library.add_service analytics "company-analytics-*" --permissions read-only
-python -m universal_s3_library.add_service app1 "app1-data-*" --permissions read-write
+python -m s3bridge.add_service analytics "company-analytics-*" --permissions read-only
+python -m s3bridge.add_service app1 "app1-data-*" --permissions read-write
 ```
 
 ```python
-from universal_s3_library import UniversalS3Client
+from s3bridge import S3BridgeClient
 
 # Use with any AWS account
-s3_client = UniversalS3Client("your-bucket-name", "analytics")
+s3_client = S3BridgeClient("your-bucket-name", "analytics")
 data = {"config": "value"}
 s3_client.write_json(data, "config/settings.json")
 ```
@@ -45,8 +45,8 @@ s3_client.write_json(data, "config/settings.json")
 ### Setup
 ```bash
 # 1. Clone or download the library
-git clone <repository-url> universal_s3_library
-cd universal_s3_library
+git clone <repository-url> s3bridge
+cd s3bridge
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -55,7 +55,7 @@ pip install -r requirements.txt
 python scripts/setup.py --admin-user your-username
 
 # 4. Set the API key from setup output
-export UNIVERSAL_S3_API_KEY=your-api-key-here
+export S3BRIDGE_API_KEY=your-api-key-here
 
 # 5. Add your first service
 python scripts/add_service.py myapp "myapp-*" --permissions read-write
@@ -127,18 +127,18 @@ python scripts/service_status.py
 ## Usage Examples
 
 ```python
-from universal_s3_library import UniversalS3Client
+from s3bridge import S3BridgeClient
 
 # Analytics service (read-only)
-analytics = UniversalS3Client("company-analytics-data", "analytics")
+analytics = S3BridgeClient("company-analytics-data", "analytics")
 reports = analytics.list_objects("reports/")
 
 # Application service (read-write)
-app = UniversalS3Client("webapp-prod-uploads", "webapp")
+app = S3BridgeClient("webapp-prod-uploads", "webapp")
 app.write_json({"user": "data"}, "users/user123.json")
 
 # Admin service (full access)
-admin = UniversalS3Client("any-bucket", "admin")
+admin = S3BridgeClient("any-bucket", "admin")
 admin.upload_file("backup.zip", "backups/daily.zip")
 ```
 

@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="universal-s3-library",
+    name="s3bridge",
     version="1.0.0",
     author="Universal S3 Team",
     description="Account-agnostic credential service for secure S3 access",

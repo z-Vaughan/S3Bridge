@@ -11,21 +11,21 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 def test_auth_provider_initialization():
     """Test that auth provider can be initialized without Midway"""
-    from src.universal_auth import UniversalAuthProvider
+    from src.universal_auth import S3BridgeAuthProvider
     
     # Should initialize without errors
-    auth = UniversalAuthProvider("test-service")
+    auth = S3BridgeAuthProvider("test-service")
     assert auth.service_name == "test-service"
     assert auth._cached_credentials is None
     print("[PASS] Auth provider initializes correctly")
 
 def test_s3_client_initialization():
     """Test that S3 client can be initialized without Midway"""
-    from src.universal_s3_client import UniversalS3Client
+    from src.universal_s3_client import S3BridgeClient
     
     # Should initialize without errors (will fail on actual use without deployment)
     try:
-        client = UniversalS3Client("test-bucket", "test-service")
+        client = S3BridgeClient("test-bucket", "test-service")
         assert client.bucket_name == "test-bucket"
         assert client.service_name == "test-service"
         print("[PASS] S3 client initializes correctly")
@@ -38,12 +38,12 @@ def test_s3_client_initialization():
 
 def test_api_key_environment():
     """Test API key environment variable handling"""
-    from src.universal_auth import UniversalAuthProvider
+    from src.universal_auth import S3BridgeAuthProvider
     
     # Set test API key
-    os.environ['UNIVERSAL_S3_API_KEY'] = 'test-key-123'
+    os.environ['S3BRIDGE_API_KEY'] = 'test-key-123'
     
-    auth = UniversalAuthProvider("test-service")
+    auth = S3BridgeAuthProvider("test-service")
     
     try:
         # This will fail because infrastructure isn't deployed, but should get past API key check
@@ -56,10 +56,10 @@ def test_api_key_environment():
             raise
     finally:
         # Clean up
-        del os.environ['UNIVERSAL_S3_API_KEY']
+        del os.environ['S3BRIDGE_API_KEY']
 
 if __name__ == "__main__":
-    print("Testing Universal S3 Library without Midway...")
+    print("Testing S3Bridge without Midway...")
     
     test_auth_provider_initialization()
     test_s3_client_initialization()

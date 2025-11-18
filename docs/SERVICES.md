@@ -1,10 +1,10 @@
-# Service Management - Universal S3 Library
+# Service Management - S3Bridge
 
-Guide for adding and managing services in the Universal S3 Library.
+Guide for adding and managing services in the S3Bridge.
 
 ## Overview
 
-The Universal S3 Library uses a service-tier architecture where each service gets specific bucket access patterns and permissions. Services are managed through IAM roles and Lambda configuration.
+The S3Bridge uses a service-tier architecture where each service gets specific bucket access patterns and permissions. Services are managed through IAM roles and Lambda configuration.
 
 ## Adding New Services
 
@@ -69,9 +69,9 @@ This automatically:
 ### 2. Use Service
 
 ```python
-from universal_s3_library import UniversalS3Client
+from s3bridge import S3BridgeClient
 
-client = UniversalS3Client("myservice-bucket", "myservice")
+client = S3BridgeClient("myservice-bucket", "myservice")
 client.write_json({"data": "value"}, "config.json")
 ```
 
@@ -80,7 +80,7 @@ client.write_json({"data": "value"}, "config.json")
 ```python
 # Test service access
 try:
-    client = UniversalS3Client("myservice-bucket", "myservice")
+    client = S3BridgeClient("myservice-bucket", "myservice")
     success = client.write_json({"test": True}, "test.json")
     print(f"Service working: {success}")
 except ValueError as e:
@@ -95,7 +95,7 @@ except ValueError as e:
 - **Use Case**: Data analysis, reporting
 
 ```python
-analytics = UniversalS3Client("company-analytics-data", "analytics")
+analytics = S3BridgeClient("company-analytics-data", "analytics")
 reports = analytics.list_objects("reports/")
 ```
 
@@ -105,7 +105,7 @@ reports = analytics.list_objects("reports/")
 - **Use Case**: Administrative tasks
 
 ```python
-admin = UniversalS3Client("any-bucket", "universal")
+admin = S3BridgeClient("any-bucket", "universal")
 admin.upload_file("backup.zip", "backups/daily.zip")
 ```
 
@@ -190,11 +190,11 @@ Monitor service usage through CloudWatch:
 
 ```bash
 # View credential requests
-aws logs filter-log-events --log-group-name "/aws/lambda/universal-credential-service" \
+aws logs filter-log-events --log-group-name "/aws/lambda/s3bridge-credential-service" \
   --filter-pattern "myservice"
 
 # Check for errors
-aws logs filter-log-events --log-group-name "/aws/lambda/universal-credential-service" \
+aws logs filter-log-events --log-group-name "/aws/lambda/s3bridge-credential-service" \
   --filter-pattern "ERROR"
 ```
 
@@ -246,8 +246,8 @@ aws iam get-role --role-name myservice-s3-access-role
 
 # Test service directly
 python -c "
-from universal_s3_library import UniversalS3Client
-client = UniversalS3Client('test-bucket', 'myservice')
+from s3bridge import S3BridgeClient
+client = S3BridgeClient('test-bucket', 'myservice')
 print('Service configured correctly')
 "
 ```

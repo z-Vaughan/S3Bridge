@@ -1,5 +1,5 @@
 """
-Performance Tests for Universal S3 Library
+Performance Tests for S3Bridge
 Tests performance characteristics and load handling
 """
 
@@ -24,7 +24,7 @@ class TestPerformance(unittest.TestCase):
         self.test_service = "perf-test"
         self.test_bucket = "perf-test-bucket"
     
-    @patch('src.universal_auth.UniversalAuthProvider')
+    @patch('src.universal_auth.S3BridgeAuthProvider')
     def test_credential_caching_performance(self, mock_auth_provider):
         """Test credential caching reduces API calls"""
         
@@ -53,9 +53,9 @@ class TestPerformance(unittest.TestCase):
         
         mock_auth_provider.return_value = mock_auth_instance
         
-        from src.universal_auth import UniversalAuthProvider
+        from src.universal_auth import S3BridgeAuthProvider
         
-        auth = UniversalAuthProvider(self.test_service)
+        auth = S3BridgeAuthProvider(self.test_service)
         
         # Simulate multiple credential requests
         for _ in range(10):
@@ -64,7 +64,7 @@ class TestPerformance(unittest.TestCase):
         # Should only call fetch once due to caching
         self.assertEqual(call_count, 1)
     
-    @patch('src.universal_s3_client.UniversalS3Client')
+    @patch('src.universal_s3_client.S3BridgeClient')
     def test_concurrent_s3_operations(self, mock_s3_client):
         """Test concurrent S3 operations"""
         
@@ -83,9 +83,9 @@ class TestPerformance(unittest.TestCase):
         mock_s3_instance.read_json.side_effect = lambda *args: mock_operation() and {'test': 'data'}
         mock_s3_client.return_value = mock_s3_instance
         
-        from src.universal_s3_client import UniversalS3Client
+        from src.universal_s3_client import S3BridgeClient
         
-        client = UniversalS3Client(self.test_bucket, self.test_service)
+        client = S3BridgeClient(self.test_bucket, self.test_service)
         
         # Test concurrent operations
         num_operations = 20
@@ -123,7 +123,7 @@ class TestPerformance(unittest.TestCase):
         initial_objects = len(gc.get_objects())
         
         # Simulate heavy usage
-        with patch('src.universal_auth.UniversalAuthProvider') as mock_auth:
+        with patch('src.universal_auth.S3BridgeAuthProvider') as mock_auth:
             mock_auth_instance = Mock()
             mock_auth_instance.get_credentials.return_value = {
                 'access_key': 'AKIA123',
@@ -132,11 +132,11 @@ class TestPerformance(unittest.TestCase):
             }
             mock_auth.return_value = mock_auth_instance
             
-            from src.universal_auth import UniversalAuthProvider
+            from src.universal_auth import S3BridgeAuthProvider
             
             # Create and destroy many auth providers
             for i in range(100):
-                auth = UniversalAuthProvider(f"test-service-{i}")
+                auth = S3BridgeAuthProvider(f"test-service-{i}")
                 auth.get_credentials()
                 del auth
         
@@ -192,7 +192,7 @@ class TestPerformance(unittest.TestCase):
     def test_error_handling_performance(self):
         """Test error handling doesn't significantly impact performance"""
         
-        with patch('src.universal_auth.UniversalAuthProvider') as mock_auth:
+        with patch('src.universal_auth.S3BridgeAuthProvider') as mock_auth:
             # Mock auth provider that fails initially then succeeds
             mock_auth_instance = Mock()
             call_count = 0
@@ -211,9 +211,9 @@ class TestPerformance(unittest.TestCase):
             mock_auth_instance.get_credentials.side_effect = mock_get_credentials
             mock_auth.return_value = mock_auth_instance
             
-            from src.universal_auth import UniversalAuthProvider
+            from src.universal_auth import S3BridgeAuthProvider
             
-            auth = UniversalAuthProvider(self.test_service)
+            auth = S3BridgeAuthProvider(self.test_service)
             
             # Time error handling
             start_time = time.time()
@@ -317,7 +317,7 @@ def run_performance_tests():
 
 
 if __name__ == "__main__":
-    print("Running Universal S3 Library Performance Tests...")
+    print("Running S3Bridge Performance Tests...")
     success = run_performance_tests()
     
     if success:

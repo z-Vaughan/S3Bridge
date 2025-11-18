@@ -8,12 +8,12 @@ import json
 import fnmatch
 from typing import Dict, Any, List, Optional
 try:
-    from .universal_auth import UniversalAuthProvider
+    from .universal_auth import S3BridgeAuthProvider
 except ImportError:
-    from universal_auth import UniversalAuthProvider
+    from universal_auth import S3BridgeAuthProvider
 
-class UniversalS3Client:
-    """Universal S3 client with service-based access control"""
+class S3BridgeClient:
+    """S3Bridge client with service-based access control"""
     
     def __init__(self, bucket_name: str, service_name: str):
         """
@@ -25,7 +25,7 @@ class UniversalS3Client:
         """
         self.bucket_name = bucket_name
         self.service_name = service_name
-        self.auth_provider = UniversalAuthProvider(service_name)
+        self.auth_provider = S3BridgeAuthProvider(service_name)
         self._s3_client = None
         
         # Validate bucket access for service
@@ -44,7 +44,7 @@ class UniversalS3Client:
         
         # Check if bucket matches any allowed pattern
         if not any(fnmatch.fnmatch(self.bucket_name, pattern) for pattern in patterns):
-            if self.service_name != 'universal':  # Universal service bypasses validation
+            if self.service_name != 'universal':  # S3Bridge universal service bypasses validation
                 raise ValueError(f"Service '{self.service_name}' not authorized for bucket '{self.bucket_name}'")
     
     def _get_s3_client(self):

@@ -1,6 +1,6 @@
-# Testing Guide - Universal S3 Library
+# Testing Guide - S3Bridge
 
-Comprehensive testing framework for the Universal S3 Library with multiple test suites covering all operations and scenarios.
+Comprehensive testing framework for the S3Bridge with multiple test suites covering all operations and scenarios.
 
 ## Test Structure
 
@@ -140,7 +140,7 @@ pip install -r requirements.txt
 ### Environment Variables
 ```bash
 # For testing API key functionality
-export UNIVERSAL_S3_API_KEY=test-key-123
+export S3BRIDGE_API_KEY=test-key-123
 
 # For integration tests (optional)
 export AWS_PROFILE=test-profile
@@ -236,4 +236,4 @@ python -m unittest tests.test_operations.TestServiceOperations.test_add_service 
 3. **Test under load**: Concurrent operations and many services
 4. **Monitor resource usage**: Memory, CPU, network calls
 
-This comprehensive testing framework ensures the Universal S3 Library is reliable, performant, and ready for production use across all supported operations and scenarios.
+This comprehensive testing framework ensures the S3Bridge is reliable, performant, and ready for production use across all supported operations and scenarios.
